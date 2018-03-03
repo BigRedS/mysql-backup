@@ -373,33 +373,9 @@ sub open_logfile{
 
 
 sub usage{
-
-exit;
-}
-
-sub help_install{
-
-print <<'EOF';
-# Fetch the repository packages from Percona web:
-
-wget "https://repo.percona.com/apt/percona-release_0.1-4.$(lsb_release -sc)_all.deb"
-
-# Install the downloaded package with dpkg. To do that, run the following commands as root or with sudo:
-
-dpkg -i percona-release_0.1-4.$(lsb_release -sc)_all.deb
-
-# Update the local cache and install the package
-
-apt-get update ; apt-get install percona-xtrabackup-24
-
-EOF
-exit 1;
-}
-
-sub usage{
 print << "EOF";
 
-$name - use Percona's xtrabackup to back up a MySQL server
+$name - use mysqldump to backup a MySQL/MariaDB server
 
 Usage:
 
@@ -411,14 +387,13 @@ OPTIONS:
 Help:
 
   --help:         see this help
-  --help-install: see instructions to install innobackupex
 
 Credentials:
 
   By default, a defaults file is used to connect to the mysqld, the default 
   path for this is ~/.my.cnf
 
-  Behaviour here is defined by innobackupex, this script does no sanitising.
+  Behaviour here is defined by mysqldump, this script does no sanitising.
 
   --defaults-file [path]
 
@@ -449,12 +424,12 @@ Backing up:
 
     path to the mysqldump binary. Default: $mysqldump
 
-  --innobackupex-option
+  --mysqldump-option
 
-    Set an innobackupex option; call multiple times to set several options. To 
+    Set a mysqldump option; call multiple times to set several options. To 
     avoid confusing the options parser, use the --opt=value syntax, eg:
 
-      --innobackupex-option=--parallel=10
+      --mysqldump-option=--parallel=10
 
   --backups-dir [path]
 
@@ -464,7 +439,7 @@ Backing up:
   --label
 
     A label to use for the backups. Influences the logfile's name, and normally
-    one of "daily", "weekly" or "monthly" but only by convention. It mey be any
+    one of "daily", "weekly" or "monthly" but only by convention. It may be any
     string
 
   --no-tar
