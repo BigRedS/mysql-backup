@@ -316,7 +316,7 @@ sub unlock{
 		return 1;
 	}
 	if($called_by_abort){
-		print "unlock() called by abort() failed: \"Lockfile '$lockfile' owned by another process: '$written_pid' (this is $$)\"";
+		print "unlock() called by abort() failed: \"Lockfile '$lockfile' owned by another process: '$written_pid' (this is $$)\n";
 		exit 255;
 	}
 	abort ("Lockfile '$lockfile' owned by another process: '$written_pid' (this is $$)");
