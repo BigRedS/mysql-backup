@@ -286,16 +286,16 @@ sub write_lock{
 	my $lockfile = shift;
 	debug("Lockfile: $lockfile");
 	if(-f $lockfile){
-		open(my $fh, "<", $lockfile) or abort ("Failed to open lockfile '$lockfile' for reading :$!");
+		open(my $fh, "<", $lockfile) or abort ("Failed to open lockfile '$lockfile' for reading when locking:$!");
 		my $written_pid = readline($fh);
 		close(fh);
 		abort("Lockfile '$lockfile' already written-to by process '$written_pid'");
 	}
-	open(my $fh, ">", $lockfile) or abort ("Failed to open lockflile '$lockfile' for writing : $!");
+	open(my $fh, ">", $lockfile) or abort ("Failed to open lockflile '$lockfile' for writing when locking: $!");
 	print $fh $$;
 	close($fh);
 	sleep 1;
-	open(my $fh, "<", $lockfile) or abort ("Failed to open lockfile '$lockfile' for reading :$!");
+	open(my $fh, "<", $lockfile) or abort ("Failed to re-open lockfile '$lockfile' for reading when locking:$!");
 	my $written_pid = readline($fh);
 	close(fh);
 	if($written_pid eq $$){
@@ -307,7 +307,7 @@ sub write_lock{
 sub unlock{
 	my $lockfile = shift;
 	my $called_by_abort = shift;
-	open(my $fh, "<", $lockfile) or abort ("Failed to open lockfile '$lockfile' for reading :$!");
+	open(my $fh, "<", $lockfile) or abort ("Failed to open lockfile '$lockfile' for reading when unlocking: $!");
 	my $written_pid = readline($fh);
 	close(fh);
 	if($written_pid eq $$){
