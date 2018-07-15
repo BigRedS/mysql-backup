@@ -1,4 +1,4 @@
 # Nightly mysql-backup backup; keeping a week's worth
 # https://github.com/BigRedS/mysql-backup
 
-0 4 * * * root /usr/sbin/mysql-backup --defaults-file /etc/mysql/debian.cnf --no-defaults-file --label daily --max-days 7
+0 4 * * * root /usr/sbin/mysql-backup --defaults-file /etc/mysql/debian.cnf --label daily --max-days 7
