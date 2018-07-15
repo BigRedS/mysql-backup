@@ -5,6 +5,7 @@
 use strict;
 use Getopt::Long;
 use DBI;
+use Sys::Syslog;
 
 my $name = 'mysql-backup';
 my $version = '0.20180303';
@@ -59,6 +60,9 @@ GetOptions(
 
 help_install() if $help_install;
 usage() if $help;
+
+openlog("$name/$label", 'pid', 'info');
+syslog('info', 'Starting');
 
 write_lock($lockfile);
 $SIG{INT} = sub{ unlock($lockfile) and abort("Ctrl-C caught", 1); };
@@ -143,6 +147,7 @@ foreach my $db (@dbs_to_backup){
 
 @dbs_to_backup = @dbs_to_backup_tmp;
 info("DBs to be backed up: ".join(',', @dbs_to_backup));
+syslog('info', 'Found ' . scalar(@dbs_to_backup) .' dbs to backup');
 
 info("Beginning backups");
 foreach my $db (@dbs_to_backup){
@@ -171,13 +176,14 @@ foreach my $db (@dbs_to_backup){
 	}
 }
 info("Backups done");
-
+syslog('info', 'Backups done');
 
 if($tar){
 	tar($backups_dir,$backup_dirname);
 	prune_tarballs($backups_dir, $retention) if $retention > 0 and $label =~ m/.+/;
 }
 unlock($lockfile);
+syslog('info', 'Exiting OK');
 info("Exiting OK");
 
 
@@ -261,6 +267,9 @@ sub abort{
 	chomp($message);
 	print STDERR "ERROR: ".$message."\n";
 	print STDERR "Aborting\n";
+	# '$dont_unlock is set on abort() calls that predate the locking of a
+	# file, which also happens to be when openlog() is called.
+	syslog('info', 'Aborting: '.$message) unless $dont_unlock;
 	unlock($lockfile, 1) unless $dont_unlock;
 	exit 1;
 }
