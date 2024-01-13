@@ -1,14 +1,12 @@
 #! /usr/bin/perl
 
-
-
 use strict;
 use Getopt::Long;
 use DBI;
 use Sys::Syslog;
 
 my $name = 'mysql-backup';
-my $version = '0.20180303';
+my $version = '0.20240113';
 
 my $lockfile = "/tmp/$name.lock";
 my $help = undef;
@@ -81,14 +79,22 @@ if($log_dir && !$no_log){
 	($log_fh,$log_path)= open_logfile($log_dir, $label);
 }
 
-if( !-f $defaults_file and !$no_defaults_file){
-	abort("Defaults file '$defaults_file' not found and --no-defults-file not set");
+# If the defaults file exists, we will use it, unless  --no-defaults-file is set.
+my $use_defaults_file = -f $defaults_file;
+$use_defaults_file = undef if $no_defaults_file;
+
+if ($mysql_user and $mysql_password){
+	$no_defaults_file++
+}
+
+if( !-f $defaults_file and $use_defaults_file){
+	abort("Defaults file '$defaults_file' not found and --no-defaults-file not set");
 }
 
 # mysqldump requires that --defaults-file be the first option if it's 
 # used, so we unshift that to the list of options grabbed from the args.
 
-unshift(@mysqldump_options, "--defaults-file=$defaults_file") unless ($no_defaults_file);
+unshift(@mysqldump_options, "--defaults-file=$defaults_file") if $use_defaults_file;
 push(@mysqldump_options, "--user=$mysql_user") if $mysql_user;
 push(@mysqldump_options, "--password=$mysql_password") if $mysql_password;
 push(@mysqldump_options, "--host=$mysql_host") if $mysql_host;
@@ -104,9 +110,12 @@ if($defaults_file and !$no_defaults_file){
 	$dsn = "DBI:mysql:mysql";
 	$dbh = DBI->connect($dsn, $mysql_user, $mysql_password);
 }else{
-	abort ("Couldn't find credentials with which to connect to the db");
+	info("Connecting without supplying credentials");
+	$dsn = "DBI:mysql:mysql";
+	$dbh = DBI->connect($dsn);
 }
 
+# DBI will have already aborted by now if the connect() above failed
 info("Connected to database OK; dsn: $dsn");
 
 # $backup_dir is the directory into which we're going to write this backup
@@ -407,11 +416,13 @@ Credentials:
 
   --defaults-file [path]
 
-    Explicitly set the path to the defaults file
+    Explicitly set the path to the defaults file. Defaults to ~/.my.cnf
+    If this file exists, it will be used (with mysqldump's --defaults-file
+    option) unless --no-defaults-file is passed
 
  --no-defaults-file
     
-    Don't use a defaults file
+    Don't use the defaults file even if it exists. Overrides --defaults-file
 
   --username [user], --password [pass] and --hostname [host]
 
